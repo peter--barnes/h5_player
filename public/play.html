@@ -4,9 +4,11 @@
     <meta charset="utf-8"/>
   </head>
   <body>
-    <video controls></video>
+    <video id="test_video0" width="420" height="320" controls autoplay src="test.mp4"></video>
+    <!--video controls></video-->
     <script>
-      var video = document.querySelector('video');
+      var video = document.getElementById('test_video0');
+     // var video = document.querySelector('video');
       var assetURL = 'video/carmer_101_dashinit.mp4';
       // Need to be specific for Blink regarding codecs
       //var mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
@@ -40,32 +42,6 @@
             console.log("on send"); 
             xhr.send();
       };
-      /*
-      function fetchAB (url, cb) {
-        console.log(url);
-        var xhr = new XMLHttpRequest;
-        xhr.open('get', url);
-        xhr.responseType = 'arraybuffer';
-        xhr.onload = function () {
-          console.log("on response"); 
-          cb(xhr.response);
-        };
-        xhr.send();
-      };
-      function sourceOpen (_) {
-        //console.log(this.readyState); // open
-        var mediaSource = this;
-        var sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
-        fetchAB(assetURL, function (buf) {
-          sourceBuffer.addEventListener('updateend', function (_) {
-            mediaSource.endOfStream();
-            video.play();
-            //console.log(mediaSource.readyState); // ended
-          });
-          sourceBuffer.appendBuffer(buf);
-        });
-      };
-      */
     </script>
   </body>
 </html>

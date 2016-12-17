@@ -1,44 +1,35 @@
 var video = document.getElementById('test_video0');
-if(null == video)
-{
-    console.log("error!");
-}
-
-var assetURL = 'test.mp4';
+// var video = document.querySelector('video');
+var assetURL = 'video/carmer_101_dashinit.mp4';
 // Need to be specific for Blink regarding codecs
-// ./mp4info frag_bunny.mp4 | grep Codec
-var mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
-
+//var mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
+var mimeCodec = 'video/mp4; codecs="avc1.4d0020"';
 if ('MediaSource' in window && MediaSource.isTypeSupported(mimeCodec)) {
-  var mediaSource = new MediaSource();
-  //console.log(mediaSource.readyState); // closed
-  video.src = URL.createObjectURL(mediaSource);
-  mediaSource.addEventListener('sourceopen', sourceOpen);
+    var mediaSource = new MediaSource;
+    //create an URL (from mediaSource OBJ) as video's source
+    video.src = URL.createObjectURL(mediaSource);
+    //listen source's open
+    mediaSource.addEventListener('sourceopen', on_source_open);
 } else {
-  console.error('Unsupported MIME type or codec: ', mimeCodec);
+    console.error('Unsupported MIME type or codec: ', mimeCodec);
 }
-
-function sourceOpen (_) {
-  //console.log(this.readyState); // open
-  var mediaSource = this;
-  var sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
-  fetchAB(assetURL, function (buf) {
-    sourceBuffer.addEventListener('updateend', function (_) {
-      mediaSource.endOfStream();
-      video.play();
-      //console.log(mediaSource.readyState); // ended
-    });
-    sourceBuffer.appendBuffer(buf);
-  });
-};
-
-function fetchAB (url, cb) {
-  console.log(url);
-  var xhr = new XMLHttpRequest;
-  xhr.open('get', url);
-  xhr.responseType = 'arraybuffer';
-  xhr.onload = function () {
-    cb(xhr.response);
-  };
-  xhr.send();
+function on_source_open(_) {
+    //console.log(this.readyState); // open
+    var mediaSource = this;
+    var sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
+    var xhr = new XMLHttpRequest;
+    xhr.open('get', assetURL);
+    xhr.responseType = 'arraybuffer';
+    xhr.onload = function () {
+        console.log("on response"); 
+        //cb(xhr.response);
+        sourceBuffer.addEventListener('updateend', function (_) {
+                mediaSource.endOfStream();
+                video.play();
+                //console.log(mediaSource.readyState); // ended
+                });
+        sourceBuffer.appendBuffer(xhr.response);
+    };
+    console.log("on send"); 
+    xhr.send();
 };
