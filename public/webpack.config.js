@@ -2,7 +2,7 @@ const path = require('path');
 
 const PATHS = {
     src: {
-        test: path.join(__dirname, 'test.js')
+        play_file: path.join(__dirname, 'play_file.js')
     },
     dist: __dirname
 };
