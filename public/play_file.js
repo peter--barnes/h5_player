@@ -4,11 +4,11 @@ import * as remuxer from 'player/remuxer/remuxer';
 
 var video = document.getElementById('test_video0');
 // var video = document.querySelector('video');
-var assetURL = 'video/carmer_101.mp4';
+var assetURL = 'video/fox.mp4';
 //var assetURL = 'video/tmp.txt';
 // Need to be specific for Blink regarding codecs
 //var mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
-var mimeCodec = 'video/mp4; codecs="avc1.4d0020"';
+var mimeCodec = 'video/mp4; codecs="avc1.42c01e"';
 if ('MediaSource' in window && MediaSource.isTypeSupported(mimeCodec)) {
     var mediaSource = new MediaSource;
     //create an URL (from mediaSource OBJ) as video's source
@@ -30,38 +30,40 @@ function on_source_open(_) {
     xhr.responseType = 'arraybuffer';
     xhr.onload = function () {
 
-        console.log("on response"); 
+        console.log("2.on response"); 
         sourceBuffer.addEventListener('updateend', function (_) {
                 mediaSource.endOfStream();
-                //video.play();
-                //console.log(mediaSource.readyState); // ended
-                });
+                video.play();
+        });
         //sourceBuffer.appendBuffer(xhr.response);
         //console.log(ab2str(xhr.response));
         var mp4box = new MP4Box();
+
         mp4box.onMoovStart = function () {
-            console.log("Starting to receive File Information");
+            console.log("3.Starting to receive File Information");
         }
         mp4box.onReady = function(info) {
-            console.log("Received File Information:");
-            console.log(info);
-            mp4box.onSegment = function (id, user, buffer) {};
-            var options = { nbSamples: 1000 };
-            var sb = null;
-            mp4box.setSegmentOptions(info.tracks[0].id, sb, options);  
+            console.log("4.info.mime:"+info.mime);
+            mp4box.onSegment = function (id, user, buffer, sampleNum) {
+                console.log("Received segment on track "+id+" for object "+user+" with a length of "+buffer.byteLength+",sampleNum="+sampleNum);
+                //sb.pendingAppends.push({ id: id, buffer: buffer, sampleNum: sampleNum  });
+                //user.appendBuffer(buffer); 
+            }; 
+            var options = { nbSamples: 100 };
+            mp4box.setSegmentOptions(info.tracks[0].id, sourceBuffer, options);  
             var initSegs = mp4box.initializeSegmentation();  
             mp4box.start();
-            console.log("mp4 started"); 
+            initSegs[0].user.appendBuffer(initSegs[0].buffer); 
+            console.log("5.mp4 processing started"); 
         };
 
         var ab = xhr.response;
         ab.fileStart = 0;
         var nextBufferStart = mp4box.appendBuffer(ab);
-        console.log("mp4 appendBuffer ended,next start:"+nextBufferStart); 
+        console.log("6.mp4 appendBuffer ended,next start:"+nextBufferStart); 
         mp4box.flush();
-        console.log("mp4 flushed"); 
     };
-    console.log("on send"); 
+    console.log("1.on send"); 
     xhr.send();
 };
 
