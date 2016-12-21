@@ -72,7 +72,7 @@ function on_source_open(_) {
                 //user.appendBuffer(out_buffer[user.segmentIndex]); 
                 user.segmentIndex++;
             }; 
-            var options = { nbSamples: 500 };
+            var options = { nbSamples: 200 };
             mp4box.setSegmentOptions(info.tracks[0].id, sourceBuffer, options);  
             initSegs = mp4box.initializeSegmentation();  
             mp4box.start();
