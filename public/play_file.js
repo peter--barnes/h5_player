@@ -37,27 +37,40 @@ function on_source_open(_) {
     var mediaSource = this;
     var sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
     sourceBuffer.segmentIndex = 0;
-    var xhr = new XMLHttpRequest;
+    sourceBuffer.AppendMode = "sequence";
+    sourceBuffer.mode = "sequence";
     var out_buffer = new Array(); 
+    var xhr = new XMLHttpRequest;
     xhr.open('get', assetURL);
     xhr.responseType = 'arraybuffer';
     xhr.onload = function () {
 
         console.log("2.on response"); 
+        var mp4box = new MP4Box();
+        var initSegs ;  
+        var update_cnt = 0;
         /*
         sourceBuffer.addEventListener('updatestart', function (_) {
                 console.log("7.0.update start");
         });
         */
         sourceBuffer.addEventListener('updateend', function (_) {
-                console.log("7.start play");
+                console.log("8.append_cnt:"+(initSegs[0].user.segmentIndex - update_cnt -1));
+                if(update_cnt < initSegs[0].user.segmentIndex)
+                {
+                    sourceBuffer.appendBuffer(out_buffer[initSegs[0].user.segmentIndex - update_cnt -1]); 
+                    update_cnt++;
+                }
+                else
+                {
+                    video.play();
+                }
+                //console.log("7.start play");
         //        mediaSource.endOfStream();
-                video.play();
+        //        video.play();
         });
         //sourceBuffer.appendBuffer(xhr.response);
         //console.log(ab2str(xhr.response));
-        var mp4box = new MP4Box();
-        var initSegs ;  
 
         mp4box.onMoovStart = function () {
             console.log("3.Starting to receive File Information");
@@ -72,7 +85,7 @@ function on_source_open(_) {
                 //user.appendBuffer(out_buffer[user.segmentIndex]); 
                 user.segmentIndex++;
             }; 
-            var options = { nbSamples: 200 };
+            var options = { nbSamples: 100 };
             mp4box.setSegmentOptions(info.tracks[0].id, sourceBuffer, options);  
             initSegs = mp4box.initializeSegmentation();  
             mp4box.start();
@@ -83,21 +96,22 @@ function on_source_open(_) {
 
         var ab = xhr.response;
         ab.fileStart = 0;
-        var nextBufferStart = mp4box.appendBuffer(ab);
         console.log("6.mp4 appendBuffer ended,next start:"+nextBufferStart); 
-        mp4box.flush();
+        var nextBufferStart = mp4box.appendBuffer(ab);
+        //mp4box.flush();
             //for(var i=0;i<sourceBuffer.segmentIndex;i++)
             {
             
                 console.log("initSegs.length:"+initSegs.length);
-                console.log(sourceBuffer);
                 console.log(initSegs[0].user);
                 console.log(initSegs[0].buffer);
                 console.log(out_buffer[0]);
+                console.log(out_buffer[1]);
                 //sourceBuffer.appendBuffer(out_buffer[0]); 
-                out_buffer[8]=concatArrayBuffers(initSegs[0].buffer,out_buffer[0]) ;
-                //sourceBuffer.appendBuffer(initSegs[0].buffer); 
-                sourceBuffer.appendBuffer(out_buffer[8]); 
+                //out_buffer[8]=concatArrayBuffers(initSegs[0].buffer,out_buffer[0],out_buffer[1],out_buffer[2]) ;
+                //sourceBuffer.appendBuffer(out_buffer[8]); 
+                console.log("7.source buffer appendBuffer start:"); 
+                sourceBuffer.appendBuffer(initSegs[0].buffer); 
             }
         //    video.play();
     };
