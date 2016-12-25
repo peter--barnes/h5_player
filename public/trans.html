@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+  </head>
+  <body>
+    <video id="test_video0" width="420" height="320" controls autoplay ></video>
+    <script>
+
+        var video = document.getElementById('test_video0');
+        var mimeCodec = 'video/mp4; codecs="avc1.4d0020"';
+        if ('MediaSource' in window && MediaSource.isTypeSupported(mimeCodec)) {
+            var mediaSource = new MediaSource;
+            video.src = URL.createObjectURL(mediaSource);
+            mediaSource.addEventListener('sourceopen', on_source_open);
+        } else {
+            console.error('Unsupported MIME type or codec: ', mimeCodec);
+        }
+
+        function on_source_open(_) {
+            var mediaSource = this;
+            var sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
+
+            var ws = new WebSocket('ws://127.0.0.1:8089');
+            ws.onopen = function() { 
+                console.log("ws open");
+            }
+            ws.onclose = function(e) {
+                console.log( "ws closed"); 
+            }
+            ws.onerror=function(e){
+                console.log(e);
+            };
+            var cnt =0;
+            ws.addEventListener('message', function (msg) {
+                var reader = new FileReader();
+
+                sourceBuffer.addEventListener('updateend', function (_) {
+                        video.play();
+                });
+                reader.addEventListener("loadend", function() {
+                        // reader.result contains the contents of blob as a typed array
+                        if(SourceBuffer.updating!=true)
+                        {
+                            sourceBuffer.appendBuffer(reader.result);
+                        }
+                        console.log(reader.result);
+                        console.log(cnt++);
+                });
+                var blob = msg.data;
+                //var ab = reader.readAsBinaryString(blob);
+                var ab = reader.readAsArrayBuffer(blob);
+    //            console.log("msg len:"+msg.data.length);
+            });
+        };
+
+    </script>
+  </body>
+</html>
