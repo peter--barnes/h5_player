@@ -20,6 +20,22 @@
         function on_source_open(_) {
             var mediaSource = this;
             var sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
+            sourceBuffer.AppendMode = "sequence";
+            sourceBuffer.mode = "sequence";
+            var out_buffer = new Array(); 
+            out_buffer[0] = new ArrayBuffer();
+            var w_cnt = 0;
+            var r_cnt = 0;
+            function on_updateend(_) {
+                    if(w_cnt>r_cnt && false == sourceBuffer.updating)
+                    {
+                        sourceBuffer.appendBuffer(out_buffer[r_cnt]);
+                        //console.log("r_cnt:"+r_cnt);
+                        r_cnt++;
+                    }
+                    video.play();
+            };
+            sourceBuffer.addEventListener('updateend', on_updateend());
 
             var ws = new WebSocket('ws://127.0.0.1:8089');
             ws.onopen = function() { 
@@ -31,26 +47,20 @@
             ws.onerror=function(e){
                 console.log(e);
             };
-            var cnt =0;
             ws.addEventListener('message', function (msg) {
                 var reader = new FileReader();
-
-                sourceBuffer.addEventListener('updateend', function (_) {
-                        video.play();
-                });
                 reader.addEventListener("loadend", function() {
-                        // reader.result contains the contents of blob as a typed array
-                        if(SourceBuffer.updating!=true)
+                        //console.log(reader.result);
+                        out_buffer[w_cnt] = reader.result.slice(0) ;
+                        //console.log("w_cnt:"+w_cnt);
+                        w_cnt++;
+                        if(w_cnt>r_cnt && false == sourceBuffer.updating)
                         {
-                            sourceBuffer.appendBuffer(reader.result);
+                            on_updateend();
                         }
-                        console.log(reader.result);
-                        console.log(cnt++);
                 });
                 var blob = msg.data;
-                //var ab = reader.readAsBinaryString(blob);
                 var ab = reader.readAsArrayBuffer(blob);
-    //            console.log("msg len:"+msg.data.length);
             });
         };
 
